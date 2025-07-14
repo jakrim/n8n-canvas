@@ -19,13 +19,13 @@ app.get('/health', (req, res) => {
 // Main overlay endpoint
 app.post('/overlay', async (req, res) => {
   try {
-    console.log('Overlay request received:', {
-      background_url: req.body.background_url?.substring(0, 50) + '...',
-      platform: req.body.platform,
-      content_length: req.body.content?.length
-    });
 
     const { background_url, content, platform, title, excerpt } = req.body;
+
+    console.log('=== REQUEST DEBUG ===');
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body:', req.body);
+    console.log('Content length:', content?.length);
 
     if (!background_url || !content) {
       return res.status(400).json({ error: 'Missing background_url or content' });
