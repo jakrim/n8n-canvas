@@ -164,120 +164,180 @@ function getMainTextColor(platform) {
   return colors[platform] || '#FFFFFF';
 }
 
-// Generate more engaging, punchy hook content
+// Smart content-first hook generation
 function generateEngagingHook(platform, title, content, excerpt) {
-  const stats = extractStats(content);
-  const problems = extractProblems(content, title);
-  const solutions = extractSolutions(title, excerpt);
-  const emotions = extractEmotions(content);
+  // Extract the best parts from your actual content
+  const contentLines = content.split('\n').filter(line => line.trim().length > 10);
+  const stats = extractDynamicStats(content);
+  const hooks = extractContentHooks(contentLines);
 
   const generators = {
-    linkedin: () => ({
-      headline: `${stats.primary} OF EXECUTIVES ${problems.main.toUpperCase()}`,
-      support: `RESULT: ${problems.consequence.toUpperCase()}\n${solutions.primary.toUpperCase()} CHANGES EVERYTHING`,
-      cta: 'LINK IN BIO ↗'
-    }),
+    linkedin: () => {
+      // Use first strong statement from content, with stats if available
+      const headline = hooks.statistic || hooks.strong || extractFirstSentence(content);
+      const support = hooks.result || hooks.framework || extractKeyBenefit(excerpt);
 
-    twitter: () => ({
-      headline: `HOT TAKE: ${problems.controversial.toUpperCase()}`,
-      support: `THEY'RE MISSING ${stats.percentage}% OF POTENTIAL\n${solutions.primary.toUpperCase()} REVEALS THE TRUTH`,
-      cta: 'LINK IN BIO ↗'
-    }),
+      return {
+        headline: formatForDisplay(headline),
+        support: formatForDisplay(support),
+        cta: 'LINK IN BIO ↗'
+      };
+    },
 
-    instagram: () => ({
-      headline: `POV: YOU'RE THE EXECUTIVE WITH ${solutions.benefit.toUpperCase()}`,
-      support: `NO MORE ${problems.struggle.toUpperCase()}\n${solutions.primary.toUpperCase()} = TRANSFORMATION`,
-      cta: 'LINK IN BIO ↗'
-    }),
+    twitter: () => {
+      // Look for controversial/hot take statements
+      const headline = hooks.hotTake || hooks.controversial || hooks.strong || extractFirstSentence(content);
+      const support = hooks.statistic || hooks.revelation || extractKeyBenefit(excerpt);
 
-    facebook: () => ({
-      headline: `"${emotions.relatable.toUpperCase()}?"`,
-      support: `WE'VE ALL BEEN THERE - ${emotions.shared.toUpperCase()}\nJUST FOUND THIS GAME-CHANGING SYSTEM`,
-      cta: 'LINK IN BIO ↗'
-    })
+      return {
+        headline: formatForDisplay(headline),
+        support: formatForDisplay(support),
+        cta: 'LINK IN BIO ↗'
+      };
+    },
+
+    instagram: () => {
+      // Look for POV or transformation statements
+      const headline = hooks.pov || hooks.transformation || hooks.aspirational || extractFirstSentence(content);
+      const support = hooks.benefit || hooks.transformation || extractKeyBenefit(excerpt);
+
+      return {
+        headline: formatForDisplay(headline),
+        support: formatForDisplay(support),
+        cta: 'LINK IN BIO ↗'
+      };
+    },
+
+    facebook: () => {
+      // Look for questions or relatable statements
+      const headline = hooks.question || hooks.relatable || hooks.story || extractFirstSentence(content);
+      const support = hooks.story || hooks.solution || extractKeyBenefit(excerpt);
+
+      return {
+        headline: formatForDisplay(headline),
+        support: formatForDisplay(support),
+        cta: 'LINK IN BIO ↗'
+      };
+    }
   };
 
   const generator = generators[platform] || generators.linkedin;
   return generator();
 }
 
-// Enhanced content extraction with more engaging outputs
-function extractStats(content) {
+// Extract different types of hooks from your actual content
+function extractContentHooks(contentLines) {
+  const hooks = {};
+
+  contentLines.forEach(line => {
+    const cleanLine = line.trim();
+
+    // Statistics (numbers with %)
+    if (/\d+%/.test(cleanLine) && !hooks.statistic) {
+      hooks.statistic = cleanLine;
+    }
+
+    // Questions
+    if (cleanLine.includes('?') && !hooks.question) {
+      hooks.question = cleanLine;
+    }
+
+    // POV statements
+    if (cleanLine.toLowerCase().includes('pov:') && !hooks.pov) {
+      hooks.pov = cleanLine;
+    }
+
+    // Hot takes
+    if (cleanLine.toLowerCase().includes('hot take') && !hooks.hotTake) {
+      hooks.hotTake = cleanLine;
+    }
+
+    // Result statements
+    if (cleanLine.toLowerCase().includes('result:') && !hooks.result) {
+      hooks.result = cleanLine;
+    }
+
+    // Strong declarative statements (short, punchy)
+    if (cleanLine.length < 80 && cleanLine.length > 20 && !cleanLine.includes('?') && !hooks.strong) {
+      hooks.strong = cleanLine;
+    }
+
+    // Transformation/benefit statements
+    if ((cleanLine.includes('transform') || cleanLine.includes('changes') || cleanLine.includes('=')) && !hooks.transformation) {
+      hooks.transformation = cleanLine;
+    }
+
+    // Relatable statements (emotional)
+    if ((cleanLine.includes('feel') || cleanLine.includes('been there') || cleanLine.includes('we\'ve all')) && !hooks.relatable) {
+      hooks.relatable = cleanLine;
+    }
+
+    // Framework mentions
+    if ((cleanLine.includes('Matrix') || cleanLine.includes('System') || cleanLine.includes('Framework')) && !hooks.framework) {
+      hooks.framework = cleanLine;
+    }
+  });
+
+  return hooks;
+}
+
+// Extract key benefit from excerpt
+function extractKeyBenefit(excerpt) {
+  if (!excerpt) return "STRATEGIC INSIGHTS FOR PROFESSIONALS";
+
+  // Look for benefit keywords
+  const benefitKeywords = ['3x', 'faster', 'accelerat', 'transform', 'revolutionar', 'master', 'breakthrough'];
+  const sentences = excerpt.split('.').filter(s => s.trim().length > 10);
+
+  for (const sentence of sentences) {
+    for (const keyword of benefitKeywords) {
+      if (sentence.toLowerCase().includes(keyword)) {
+        return sentence.trim();
+      }
+    }
+  }
+
+  return sentences[0] || excerpt.substring(0, 100);
+}
+
+// Get first strong sentence from content
+function extractFirstSentence(content) {
+  const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 15);
+  return sentences[0]?.trim() || content.substring(0, 80);
+}
+
+// Smart formatting for display
+function formatForDisplay(text) {
+  if (!text) return "PROFESSIONAL INSIGHTS";
+
+  // Clean up the text
+  let formatted = text
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Remove emojis for headline (we'll add them back strategically)
+  formatted = formatted.replace(/[^\w\s.,!?:%-]/g, '');
+
+  // Convert to uppercase for impact, but preserve some structure
+  if (formatted.length < 60) {
+    return formatted.toUpperCase();
+  } else {
+    // For longer text, keep sentence case but make key words uppercase
+    return formatted.replace(/\b(RESULT|POV|HOT TAKE|MATRIX|SYSTEM|FRAMEWORK|TRANSFORMATION)\b/gi, word => word.toUpperCase());
+  }
+}
+
+// Dynamic stats extraction
+function extractDynamicStats(content) {
   const numbers = content.match(/(\d+)%/g) || [];
-  const primary = numbers[0] || `${Math.floor(Math.random() * 20) + 80}%`;
-  const percentage = primary.replace('%', '');
-  return { primary, percentage };
-}
-
-function extractProblems(content, title) {
-  const problemMap = {
-    'mentor': {
-      main: 'PICK WRONG MENTORS',
-      struggle: 'NAVIGATING MENTORSHIP ALONE',
-      controversial: 'MENTORSHIP IS JUST NETWORKING'
-    },
-    'leadership': {
-      main: 'LACK LEADERSHIP SKILLS',
-      struggle: 'LEADING WITHOUT DIRECTION',
-      controversial: 'LEADERSHIP CAN\'T BE TAUGHT'
-    },
-    'career': {
-      main: 'PLATEAU IN CAREERS',
-      struggle: 'CAREER UNCERTAINTY',
-      controversial: 'HARD WORK GUARANTEES SUCCESS'
-    }
-  };
-
-  let problems = {
-    main: 'STRUGGLE WITH STRATEGIC GUIDANCE',
-    struggle: 'UNCERTAIN NEXT STEPS',
-    controversial: 'SUCCESS IS JUST LUCK'
-  };
-
-  for (const [keyword, data] of Object.entries(problemMap)) {
-    if (title.toLowerCase().includes(keyword) || content.toLowerCase().includes(keyword)) {
-      problems = data;
-      break;
-    }
-  }
+  const primary = numbers[0] || null;
+  const secondary = numbers[1] || null;
 
   return {
-    ...problems,
-    consequence: 'STALLED CAREERS, WASTED POTENTIAL'
-  };
-}
-
-function extractSolutions(title, excerpt) {
-  const frameworkMatch = title.match(/([\w-]+)\s+(Method|Framework|Matrix|System|Guide)/i);
-  const primary = frameworkMatch ? frameworkMatch[0].toUpperCase() : 'STRATEGIC FRAMEWORK';
-
-  const benefitMatch = excerpt.match(/(3x|faster|accelerat|transform|revolutionar|master)/i);
-  const benefit = benefitMatch ?
-    (benefitMatch[0].includes('3x') ? '3X CAREER ACCELERATION' : 'BREAKTHROUGH RESULTS') :
-    'EXCEPTIONAL RESULTS';
-
-  return { primary, benefit };
-}
-
-function extractEmotions(content) {
-  const emotionMap = {
-    'lost': 'FEEL COMPLETELY LOST',
-    'stuck': 'FEEL STUCK IN PATTERNS',
-    'frustrated': 'GET FRUSTRATED WITH PROGRESS',
-    'overwhelmed': 'FEEL OVERWHELMED BY CHOICES'
-  };
-
-  let relatable = 'FEEL UNCERTAIN ABOUT NEXT STEPS';
-  for (const [trigger, emotion] of Object.entries(emotionMap)) {
-    if (content.toLowerCase().includes(trigger)) {
-      relatable = emotion;
-      break;
-    }
-  }
-
-  return {
-    relatable,
-    shared: 'WANTING GUIDANCE BUT NOT KNOWING WHERE TO START'
+    primary,
+    secondary,
+    hasStats: numbers.length > 0
   };
 }
 
