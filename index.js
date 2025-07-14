@@ -3,6 +3,7 @@ const express = require('express');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const fetch = require('node-fetch');
 const app = express();
+const path = require('path');
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -267,3 +268,37 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
   process.exit(0);
 });
+
+function getFontWithFallback(requestedFont) {
+  // Try different font variations
+  const fonts = [
+    requestedFont,
+    'Arial',
+    'sans-serif',
+    'DejaVu Sans',
+    'Liberation Sans'
+  ];
+
+  return fonts[0]; // Canvas will fallback automatically
+}
+
+// Update your font functions:
+function getPlatformFont(platform) {
+  const fonts = {
+    linkedin: 'bold 40px Arial, sans-serif',
+    twitter: 'bold 38px Arial, sans-serif',
+    instagram: 'bold 42px Arial, sans-serif',
+    facebook: 'bold 36px Arial, sans-serif'
+  };
+  return fonts[platform] || fonts.linkedin;
+}
+
+function getPlatformSupportFont(platform) {
+  const fonts = {
+    linkedin: 'normal 26px Arial, sans-serif',
+    twitter: 'normal 24px Arial, sans-serif',
+    instagram: 'normal 28px Arial, sans-serif',
+    facebook: 'normal 25px Arial, sans-serif'
+  };
+  return fonts[platform] || fonts.linkedin;
+}
