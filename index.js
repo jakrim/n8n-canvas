@@ -81,15 +81,15 @@ app.post('/overlay', async (req, res) => {
 
     // Supporting text - smaller, white
     if (hookContent.support) {
-      yPos += (headlineLines.length * getMainLineHeight(platform)) + 40;
+      yPos += (headlineLines.length * getMainLineHeight(platform)) + 50; // More spacing
       ctx.fillStyle = '#E8E8E8';
       ctx.font = getSupportFont(platform);
 
       const supportLines = wrapText(ctx, hookContent.support, 900);
       supportLines.forEach((line, index) => {
-        ctx.fillText(line, 540, yPos + (index * 36));
+        ctx.fillText(line, 540, yPos + (index * 40)); // Increased line height
       });
-      yPos += (supportLines.length * 36) + 30;
+      yPos += (supportLines.length * 40) + 40; // More spacing after
     }
 
     // Call to action with gradient
@@ -175,25 +175,25 @@ function generateEngagingHook(platform, title, content, excerpt) {
     linkedin: () => ({
       headline: `${stats.primary} OF EXECUTIVES ${problems.main.toUpperCase()}`,
       support: `RESULT: ${problems.consequence.toUpperCase()}\n${solutions.primary.toUpperCase()} CHANGES EVERYTHING`,
-      cta: 'LEARN THE SYSTEM ↗'
+      cta: 'LINK IN BIO ↗'
     }),
 
     twitter: () => ({
       headline: `HOT TAKE: ${problems.controversial.toUpperCase()}`,
       support: `THEY'RE MISSING ${stats.percentage}% OF POTENTIAL\n${solutions.primary.toUpperCase()} REVEALS THE TRUTH`,
-      cta: 'READ THE THREAD ↗'
+      cta: 'LINK IN BIO ↗'
     }),
 
     instagram: () => ({
       headline: `POV: YOU'RE THE EXECUTIVE WITH ${solutions.benefit.toUpperCase()}`,
       support: `NO MORE ${problems.struggle.toUpperCase()}\n${solutions.primary.toUpperCase()} = TRANSFORMATION`,
-      cta: 'SWIPE FOR MORE ↗'
+      cta: 'LINK IN BIO ↗'
     }),
 
     facebook: () => ({
       headline: `"${emotions.relatable.toUpperCase()}?"`,
       support: `WE'VE ALL BEEN THERE - ${emotions.shared.toUpperCase()}\nJUST FOUND THIS GAME-CHANGING SYSTEM`,
-      cta: 'SHARE YOUR STORY ↗'
+      cta: 'LINK IN BIO ↗'
     })
   };
 
@@ -282,19 +282,20 @@ function extractEmotions(content) {
 }
 
 // Improved text wrapping with better word spacing
+// Enhanced text wrapping that respects sentence boundaries
 function wrapText(ctx, text, maxWidth) {
-  const words = text.split(' ');
+  // First try to wrap by sentences
+  const sentences = text.split(/(?<=[.!?])\s+/);
   const lines = [];
-  let currentLine = words[0] || '';
+  let currentLine = '';
 
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const testLine = currentLine + ' ' + word;
+  for (const sentence of sentences) {
+    const testLine = currentLine ? currentLine + ' ' + sentence : sentence;
     const metrics = ctx.measureText(testLine);
 
     if (metrics.width > maxWidth && currentLine.length > 0) {
       lines.push(currentLine);
-      currentLine = word;
+      currentLine = sentence;
     } else {
       currentLine = testLine;
     }
@@ -304,7 +305,35 @@ function wrapText(ctx, text, maxWidth) {
     lines.push(currentLine);
   }
 
-  return lines;
+  // If any line is still too long, fall back to word wrapping
+  const finalLines = [];
+  for (const line of lines) {
+    if (ctx.measureText(line).width <= maxWidth) {
+      finalLines.push(line);
+    } else {
+      // Word wrap this line
+      const words = line.split(' ');
+      let wordLine = words[0] || '';
+
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const testLine = wordLine + ' ' + word;
+
+        if (ctx.measureText(testLine).width > maxWidth && wordLine.length > 0) {
+          finalLines.push(wordLine);
+          wordLine = word;
+        } else {
+          wordLine = testLine;
+        }
+      }
+
+      if (wordLine.length > 0) {
+        finalLines.push(wordLine);
+      }
+    }
+  }
+
+  return finalLines;
 }
 
 // Optimized image loading with error handling
