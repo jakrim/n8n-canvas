@@ -46,17 +46,11 @@ app.post('/overlay', async (req, res) => {
     ctx.fillStyle = overlay;
     ctx.fillRect(0, 500, 1080, 580);
 
-    // Load and add Get Mentors logo (smaller, top position)
+    // Load and add Get Mentors logo
     try {
       const logo = await loadImageFromUrl('https://res.cloudinary.com/dpglmhglb/image/upload/v1752430102/M-Logo512_e4wycy.png');
-      const logoSize = 60;
+      const logoSize = 100;
       ctx.drawImage(logo, 540 - logoSize/2, 530, logoSize, logoSize);
-
-      // Add brand text under logo
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 18px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('GET MENTORS', 540, 610);
     } catch (logoError) {
       console.warn('Logo failed to load:', logoError.message);
     }
