@@ -120,10 +120,10 @@ app.post('/overlay', async (req, res) => {
 // Enhanced font settings for more engaging text
 function getMainFont(platform) {
   const fonts = {
-    linkedin: 'bold 52px Arial',
-    twitter: 'bold 48px Arial',
+    linkedin: 'bold 56px Arial',
+    twitter: 'bold 46px Arial',
     instagram: 'bold 56px Arial',
-    facebook: 'bold 50px Arial'
+    facebook: 'bold 56px Arial'
   };
   return fonts[platform] || fonts.linkedin;
 }
@@ -140,10 +140,10 @@ function getMainLineHeight(platform) {
 
 function getSupportFont(platform) {
   const fonts = {
-    linkedin: 'normal 28px Arial',
-    twitter: 'normal 26px Arial',
-    instagram: 'normal 30px Arial',
-    facebook: 'normal 27px Arial'
+    linkedin: 'normal 34px Arial',
+    twitter: 'normal 34px Arial',
+    instagram: 'normal 34px Arial',
+    facebook: 'normal 34px Arial'
   };
   return fonts[platform] || fonts.linkedin;
 }
